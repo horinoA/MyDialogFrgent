@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MyDialogFragment</string>
+    <string name="end_messe_title">アプリを終了</string>
+    <string name="end_messe_messe">アプリを終了します</string>
 </resources>
