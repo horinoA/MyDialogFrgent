@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         okAlert.setOnClickListener{
             val dialogfragment = DialogFragment()
-            dialogfragment.OkAlertShow(this,R.string.end_messe_title,R.string.end_messe_messe,
+            dialogfragment.OkCancelAlertShow(this,R.string.end_messe_title,R.string.end_messe_messe,
                     {it ->
                         if(it == true){
                             Log.v("TAG","true")
