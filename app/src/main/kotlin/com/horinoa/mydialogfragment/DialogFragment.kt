@@ -4,6 +4,8 @@ import android.app.*
 import android.app.DialogFragment
 import android.content.DialogInterface
 import android.os.Bundle
+import android.util.Log
+import android.widget.TextView
 import java.io.Serializable
 
 /**
@@ -24,19 +26,19 @@ class ClickListener : Serializable {
 
 class DialogFragment {
 
-    fun OkAlertShow(activity:Activity,titel: Int, messe:Int){
+    fun OkAlertShow(activity: Activity, titel: Int, messe: Int,callback:() -> Unit){
         val args = Bundle()
         args.putInt(TITLE,R.string.end_messe_title)
         args.putInt(MESSE,R.string.end_messe_messe)
         val clicklistener = ClickListener()
         clicklistener.okClickListner = DialogInterface.OnClickListener { dialog, i ->
+            callback.invoke()
             dialog.dismiss()
         }
         args.putSerializable(LISTENER,clicklistener as Serializable)
         val mydialogfragment = MyDialogFragment.newInstance(args)
-        mydialogfragment.show(activity.fragmentManager,"")
+        mydialogfragment.show(activity.fragmentManager,"OKALERT")
     }
-
 
     fun OkCancelAlertShow(activity:Activity,titel: Int, messe: Int, callback: (Boolean) -> Unit) {
         val args = Bundle()
@@ -53,7 +55,37 @@ class DialogFragment {
         }
         args.putSerializable(LISTENER,clicklistener as Serializable)
         val mydialogfragment = MyDialogFragment.newInstance(args)
-        mydialogfragment.show(activity.fragmentManager,"")
+        mydialogfragment.show(activity.fragmentManager,"OKCANCEL")
+    }
+
+    fun OkLaterCancelAlertShow(activity:Activity,titel: Int, messe: Int, callback: (Boolean?) -> Unit) {
+        val args = Bundle()
+        args.putInt(TITLE,R.string.end_messe_title)
+        args.putInt(MESSE,R.string.end_messe_messe)
+        val clicklistener = ClickListener()
+        clicklistener.okClickListner = DialogInterface.OnClickListener { dialog, i ->
+            callback(true)
+            dialog.dismiss()
+        }
+        clicklistener.noClickListner =  DialogInterface.OnClickListener { dialog, i ->
+            callback(false)
+            dialog.dismiss()
+        }
+        clicklistener.neutralClickListner = DialogInterface.OnClickListener { dialog, i ->
+            callback(null)
+            dialog.dismiss()
+        }
+        args.putSerializable(LISTENER,clicklistener as Serializable)
+        val mydialogfragment = MyDialogFragment.newInstance(args)
+        mydialogfragment.show(activity.fragmentManager,"OKCANCEL")
+    }
+
+    fun ListAlertShow(activity:Activity, titel: Int, list:Array<String> ,callback: (Int) -> Unit){
+        val args = Bundle()
+        args.putInt(TITLE,R.string.end_messe_title)
+        args.putStringArray(ITEMS,list)
+        val mydialogfragment = MyDialogFragment.newInstance(args)
+        mydialogfragment.show(activity.fragmentManager,"LIST")
     }
 
 
@@ -61,10 +93,12 @@ class DialogFragment {
 
 open class MyDialogFragment : DialogFragment() {
 
+    init { }
+
     companion object{
-        fun newInstance(getargs:Bundle): MyDialogFragment {
+        fun newInstance(getArgs:Bundle): MyDialogFragment {
             val dialogfragment = MyDialogFragment()
-            dialogfragment.arguments = getargs
+            dialogfragment.arguments = getArgs
             return dialogfragment
         }
     }
@@ -72,29 +106,18 @@ open class MyDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(activity)
         val listerner = arguments.getSerializable(LISTENER) as ClickListener
-        listerner.okClickListner?.let {builder.setPositiveButton("OK", listerner.okClickListner ) }
-        listerner.noClickListner?.let {builder.setNegativeButton("Cancel", listerner.noClickListner ) }
+
+        val okString = listerner.neutralClickListner?.let{"Yes"} ?: "OK"
+        val noString = listerner.neutralClickListner?.let{"No"} ?: "Cancel"
+        listerner.okClickListner?.let {builder.setPositiveButton(okString, listerner.okClickListner ) }
+        listerner.noClickListner?.let {builder.setNegativeButton(noString, listerner.noClickListner ) }
+        listerner.neutralClickListner?.let {builder.setNeutralButton("Later",listerner.neutralClickListner) }
 
         arguments.getInt(TITLE)?.let{builder.setTitle(getString(arguments.getInt(TITLE)))}
         arguments.getInt(MESSE)?.let{builder.setMessage(getString(arguments.getInt(MESSE)))}
         arguments.getInt(ITEMS)?.let{arguments.getStringArray(ITEMS)}
+
         return builder.create()
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        retainInstance = true
-    }
-
-    override fun onSaveInstanceState(outState: Bundle?) {
-        super.onSaveInstanceState(outState)
-    }
-
-
-    override fun onDestroyView() {
-        if (getDialog() != null && getRetainInstance()){
-            getDialog().setDismissMessage(null)}
-        super.onDestroyView()
     }
 
 }

@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">MyDialogFragment</string>
-    <string name="end_messe_title">アプリを終了</string>
-    <string name="end_messe_messe">アプリを終了します</string>
+    <string name="end_messe_title">DialogFragmentテスト</string>
+    <string name="end_messe_messe">Kotlinで書いてみたよーん</string>
 </resources>
