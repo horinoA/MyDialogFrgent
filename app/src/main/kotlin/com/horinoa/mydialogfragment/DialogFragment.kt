@@ -14,7 +14,7 @@ import java.io.Serializable
 
 val TITLE = "title"
 val MESSE = "messe"
-val ITEMS = "items"
+val SINGLEITEMS = "singleitems"
 val LISTENER = "listener"
 
 
@@ -22,6 +22,7 @@ class ClickListener : Serializable {
     var okClickListner: DialogInterface.OnClickListener? = null
     var noClickListner: DialogInterface.OnClickListener? = null
     var neutralClickListner: DialogInterface.OnClickListener? = null
+    var listSingleClick : DialogInterface.OnClickListener? = null
 }
 
 class DialogFragment {
@@ -83,7 +84,13 @@ class DialogFragment {
     fun ListAlertShow(activity:Activity, titel: Int, list:Array<String> ,callback: (Int) -> Unit){
         val args = Bundle()
         args.putInt(TITLE,R.string.end_messe_title)
-        args.putStringArray(ITEMS,list)
+        args.putStringArray(SINGLEITEMS,list)
+        val clicklistener = ClickListener()
+        clicklistener.listSingleClick = DialogInterface.OnClickListener { dialog, i ->
+            callback(i)
+            dialog.dismiss()
+        }
+        args.putSerializable(LISTENER,clicklistener as Serializable)
         val mydialogfragment = MyDialogFragment.newInstance(args)
         mydialogfragment.show(activity.fragmentManager,"LIST")
     }
@@ -107,15 +114,18 @@ open class MyDialogFragment : DialogFragment() {
         val builder = AlertDialog.Builder(activity)
         val listerner = arguments.getSerializable(LISTENER) as ClickListener
 
+        if(arguments.containsKey(TITLE)){ builder.setTitle(getString(arguments.getInt(TITLE)))}
+        if(arguments.containsKey(MESSE)){builder.setMessage(getString(arguments.getInt(MESSE)))}
+        if(arguments.containsKey(SINGLEITEMS)){
+            builder.setItems(arguments.getStringArray(SINGLEITEMS),listerner.listSingleClick)
+        }
+
         val okString = listerner.neutralClickListner?.let{"Yes"} ?: "OK"
         val noString = listerner.neutralClickListner?.let{"No"} ?: "Cancel"
         listerner.okClickListner?.let {builder.setPositiveButton(okString, listerner.okClickListner ) }
         listerner.noClickListner?.let {builder.setNegativeButton(noString, listerner.noClickListner ) }
         listerner.neutralClickListner?.let {builder.setNeutralButton("Later",listerner.neutralClickListner) }
 
-        arguments.getInt(TITLE)?.let{builder.setTitle(getString(arguments.getInt(TITLE)))}
-        arguments.getInt(MESSE)?.let{builder.setMessage(getString(arguments.getInt(MESSE)))}
-        arguments.getInt(ITEMS)?.let{arguments.getStringArray(ITEMS)}
 
         return builder.create()
     }

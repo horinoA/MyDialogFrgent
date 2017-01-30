@@ -14,6 +14,8 @@ class MainActivity : AppCompatActivity() {
     val okCancelAlert:Button by lazy {findViewById(R.id.okNoAlertButtom) as Button}
     val okLaterNoText: TextView by lazy{ findViewById(R.id.okLaterNoAlertTextView) as TextView}
     val okLaterNoAlert:Button by lazy {findViewById(R.id.okLaterNoAlertButtom) as Button}
+    val listText: TextView by lazy{ findViewById(R.id.listAlertTextView) as TextView}
+    val listAlert:Button by lazy {findViewById(R.id.listAlertButtom) as Button}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +65,17 @@ class MainActivity : AppCompatActivity() {
                                     okLaterNoText.setText("Later")
                                 }
                             }
+                        }
+                )
+            }
+
+            listAlert.setOnClickListener {
+                val strlist = arrayOf("hogehohe","fugafuga","pakupaku")
+                dialogfragment.ListAlertShow(this,
+                        R.string.end_messe_title,
+                        strlist,
+                        {it ->
+                            listText.setText(strlist[it])
                         }
                 )
             }
