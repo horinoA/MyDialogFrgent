@@ -5,8 +5,9 @@ import android.app.DialogFragment
 import android.content.DialogInterface
 import android.os.Bundle
 import android.util.Log
-import android.widget.TextView
 import java.io.Serializable
+
+
 
 /**
  * Created by horinoA on 2017/01/13.
@@ -14,23 +15,25 @@ import java.io.Serializable
 
 val TITLE = "title"
 val MESSE = "messe"
-val SINGLEITEMS = "singleitems"
+val ITEMS = "items"
 val LISTENER = "listener"
-
+val CHOOSESINGLE = "chooseItemInt"
 
 class ClickListener : Serializable {
     var okClickListner: DialogInterface.OnClickListener? = null
     var noClickListner: DialogInterface.OnClickListener? = null
     var neutralClickListner: DialogInterface.OnClickListener? = null
-    var listSingleClick : DialogInterface.OnClickListener? = null
+    var listClick : DialogInterface.OnClickListener? = null
+    var listSinglecallback : ((Int) -> Unit)? = null
+    var listMulticallback : ((Array<Boolean>) -> Unit)? = null
 }
 
 class DialogFragment {
 
-    fun OkAlertShow(activity: Activity, titel: Int, messe: Int,callback:() -> Unit){
+    fun OkAlertShow(activity: Activity, title: Int, messe: Int,callback:() -> Unit){
         val args = Bundle()
-        args.putInt(TITLE,R.string.end_messe_title)
-        args.putInt(MESSE,R.string.end_messe_messe)
+        args.putInt(TITLE,title)
+        args.putInt(MESSE,messe)
         val clicklistener = ClickListener()
         clicklistener.okClickListner = DialogInterface.OnClickListener { dialog, i ->
             callback.invoke()
@@ -41,10 +44,10 @@ class DialogFragment {
         mydialogfragment.show(activity.fragmentManager,"OKALERT")
     }
 
-    fun OkCancelAlertShow(activity:Activity,titel: Int, messe: Int, callback: (Boolean) -> Unit) {
+    fun OkCancelAlertShow(activity:Activity,title: Int, messe: Int, callback: (Boolean) -> Unit) {
         val args = Bundle()
-        args.putInt(TITLE,R.string.end_messe_title)
-        args.putInt(MESSE,R.string.end_messe_messe)
+        args.putInt(TITLE,title)
+        args.putInt(MESSE,messe)
         val clicklistener = ClickListener()
         clicklistener.okClickListner = DialogInterface.OnClickListener { dialog, i ->
             callback(true)
@@ -59,10 +62,10 @@ class DialogFragment {
         mydialogfragment.show(activity.fragmentManager,"OKCANCEL")
     }
 
-    fun OkLaterCancelAlertShow(activity:Activity,titel: Int, messe: Int, callback: (Boolean?) -> Unit) {
+    fun OkLaterCancelAlertShow(activity:Activity,title: Int, messe: Int, callback: (Boolean?) -> Unit) {
         val args = Bundle()
-        args.putInt(TITLE,R.string.end_messe_title)
-        args.putInt(MESSE,R.string.end_messe_messe)
+        args.putInt(TITLE,title)
+        args.putInt(MESSE,messe)
         val clicklistener = ClickListener()
         clicklistener.okClickListner = DialogInterface.OnClickListener { dialog, i ->
             callback(true)
@@ -81,12 +84,12 @@ class DialogFragment {
         mydialogfragment.show(activity.fragmentManager,"OKCANCEL")
     }
 
-    fun ListAlertShow(activity:Activity, titel: Int, list:Array<String> ,callback: (Int) -> Unit){
+    fun ListAlertShow(activity:Activity, title: Int, list:Array<String> ,callback: (Int) -> Unit){
         val args = Bundle()
-        args.putInt(TITLE,R.string.end_messe_title)
-        args.putStringArray(SINGLEITEMS,list)
+        args.putInt(TITLE,title)
+        args.putStringArray(ITEMS,list)
         val clicklistener = ClickListener()
-        clicklistener.listSingleClick = DialogInterface.OnClickListener { dialog, i ->
+        clicklistener.listClick = DialogInterface.OnClickListener { dialog, i ->
             callback(i)
             dialog.dismiss()
         }
@@ -95,7 +98,33 @@ class DialogFragment {
         mydialogfragment.show(activity.fragmentManager,"LIST")
     }
 
+    fun ListSingleAlertShow(activity:Activity,
+                        title: Int,
+                        list:Array<String> ,
+                        callback: (Int) -> Unit){
+        val args = Bundle()
+        args.putInt(TITLE,title)
+        args.putStringArray(ITEMS,list)
+        val clicklistener = ClickListener()
+        clicklistener.listSinglecallback = callback
+        args.putSerializable(LISTENER,clicklistener as Serializable)
+        val mydialogfragment = MyDialogFragment.newInstance(args)
+        mydialogfragment.show(activity.fragmentManager,"LISTSINGLE")
+    }
 
+    fun ListMultiAlertShow(activity:Activity,
+                        title: Int,
+                        list:Array<String> ,
+                        callback: (Array<Boolean>) -> Unit){
+        val args = Bundle()
+        args.putInt(TITLE,title)
+        args.putStringArray(ITEMS,list)
+        val clicklistener = ClickListener()
+        clicklistener.listMulticallback = callback
+        args.putSerializable(LISTENER,clicklistener as Serializable)
+        val mydialogfragment = MyDialogFragment.newInstance(args)
+        mydialogfragment.show(activity.fragmentManager,"LISTMULTHI")
+    }
 }
 
 open class MyDialogFragment : DialogFragment() {
@@ -114,18 +143,45 @@ open class MyDialogFragment : DialogFragment() {
         val builder = AlertDialog.Builder(activity)
         val listerner = arguments.getSerializable(LISTENER) as ClickListener
 
-        if(arguments.containsKey(TITLE)){ builder.setTitle(getString(arguments.getInt(TITLE)))}
+        if(arguments.containsKey(TITLE)){builder.setTitle(getString(arguments.getInt(TITLE)))}
         if(arguments.containsKey(MESSE)){builder.setMessage(getString(arguments.getInt(MESSE)))}
-        if(arguments.containsKey(SINGLEITEMS)){
-            builder.setItems(arguments.getStringArray(SINGLEITEMS),listerner.listSingleClick)
+        if(arguments.containsKey(ITEMS)){
+            builder.setItems(arguments.getStringArray(ITEMS),listerner.listClick)
         }
 
         val okString = listerner.neutralClickListner?.let{"Yes"} ?: "OK"
         val noString = listerner.neutralClickListner?.let{"No"} ?: "Cancel"
         listerner.okClickListner?.let {builder.setPositiveButton(okString, listerner.okClickListner ) }
         listerner.noClickListner?.let {builder.setNegativeButton(noString, listerner.noClickListner ) }
-        listerner.neutralClickListner?.let {builder.setNeutralButton("Later",listerner.neutralClickListner) }
+        listerner.neutralClickListner?.let{builder.setNeutralButton("Later",listerner.neutralClickListner)}
 
+        listerner.listSinglecallback?.let{
+            val callback = listerner.listSinglecallback as (Int) -> Unit
+            builder.setSingleChoiceItems(arguments.getStringArray(ITEMS), 0,
+                    DialogInterface.OnClickListener(){dialog,i ->
+                        arguments.putInt(CHOOSESINGLE,i)
+                    })
+            builder.setPositiveButton(okString,DialogInterface.OnClickListener { dialog, i ->
+                callback(arguments.getInt(CHOOSESINGLE))
+                dialog.dismiss()
+            })
+            builder.setNegativeButton(noString,DialogInterface.OnClickListener { dialog, i ->
+                dialog.dismiss()
+            })
+        }
+
+        listerner.listMulticallback?.let{
+            val callback = listerner.listMulticallback as (Array<Boolean>) -> Unit
+            val checkArry = BooleanArray(arguments.getStringArray(ITEMS).size,{false})
+
+            builder.setMultiChoiceItems(arguments.getStringArray(ITEMS),null,
+                    DialogInterface.OnMultiChoiceClickListener { dialog, i, isChecked ->
+                        if (isChecked)checkArry[i] = true else checkArry[i] = false
+                    }
+            )
+
+
+        }
 
         return builder.create()
     }
