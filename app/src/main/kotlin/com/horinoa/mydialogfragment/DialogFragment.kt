@@ -18,6 +18,7 @@ val MESSE = "messe"
 val ITEMS = "items"
 val LISTENER = "listener"
 val CHOOSESINGLE = "chooseItemInt"
+val CHOOSEMULTI = "choosemulti"
 
 class ClickListener : Serializable {
     var okClickListner: DialogInterface.OnClickListener? = null
@@ -25,7 +26,7 @@ class ClickListener : Serializable {
     var neutralClickListner: DialogInterface.OnClickListener? = null
     var listClick : DialogInterface.OnClickListener? = null
     var listSinglecallback : ((Int) -> Unit)? = null
-    var listMulticallback : ((Array<Boolean>) -> Unit)? = null
+    var listMulticallback : ((BooleanArray) -> Unit)? = null
 }
 
 class DialogFragment {
@@ -115,7 +116,7 @@ class DialogFragment {
     fun ListMultiAlertShow(activity:Activity,
                         title: Int,
                         list:Array<String> ,
-                        callback: (Array<Boolean>) -> Unit){
+                        callback: (BooleanArray) -> Unit){
         val args = Bundle()
         args.putInt(TITLE,title)
         args.putStringArray(ITEMS,list)
@@ -139,6 +140,11 @@ open class MyDialogFragment : DialogFragment() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(activity)
         val listerner = arguments.getSerializable(LISTENER) as ClickListener
@@ -158,29 +164,34 @@ open class MyDialogFragment : DialogFragment() {
         listerner.listSinglecallback?.let{
             val callback = listerner.listSinglecallback as (Int) -> Unit
             builder.setSingleChoiceItems(arguments.getStringArray(ITEMS), 0,
-                    DialogInterface.OnClickListener(){dialog,i ->
+                    {dialog,i ->
                         arguments.putInt(CHOOSESINGLE,i)
                     })
-            builder.setPositiveButton(okString,DialogInterface.OnClickListener { dialog, i ->
+            builder.setPositiveButton(okString,{ dialog, i ->
                 callback(arguments.getInt(CHOOSESINGLE))
                 dialog.dismiss()
             })
-            builder.setNegativeButton(noString,DialogInterface.OnClickListener { dialog, i ->
+            builder.setNegativeButton(noString,{ dialog, i ->
                 dialog.dismiss()
             })
         }
 
         listerner.listMulticallback?.let{
-            val callback = listerner.listMulticallback as (Array<Boolean>) -> Unit
+            val callback = listerner.listMulticallback as (BooleanArray) -> Unit
             val checkArry = BooleanArray(arguments.getStringArray(ITEMS).size,{false})
 
             builder.setMultiChoiceItems(arguments.getStringArray(ITEMS),null,
-                    DialogInterface.OnMultiChoiceClickListener { dialog, i, isChecked ->
+                    { dialog, i, isChecked ->
                         if (isChecked)checkArry[i] = true else checkArry[i] = false
-                    }
-            )
-
-
+                        arguments.putBooleanArray(CHOOSEMULTI,checkArry)
+                    })
+            builder.setPositiveButton(okString, { dialog, i ->
+                callback(arguments.getBooleanArray(CHOOSEMULTI))
+                dialog.dismiss()
+            })
+            builder.setNegativeButton(noString,{dialog,i ->
+                dialog.dismiss()
+            })
         }
 
         return builder.create()

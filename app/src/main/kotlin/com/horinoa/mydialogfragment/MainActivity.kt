@@ -18,6 +18,8 @@ class MainActivity : AppCompatActivity() {
     val listAlert:Button by lazy {findViewById(R.id.listAlertButtom) as Button}
     val listSingleText: TextView by lazy{ findViewById(R.id.listSingleAlertTextView) as TextView}
     val listSingleAlert:Button by lazy {findViewById(R.id.listSingleAlertButtom) as Button}
+    val listMultiText: TextView by lazy{ findViewById(R.id.listMultiAlertTextView) as TextView}
+    val listMultiAlert:Button by lazy {findViewById(R.id.listMultiAlertButtom) as Button}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,6 +91,22 @@ class MainActivity : AppCompatActivity() {
                         strlist,
                         {it ->
                             listSingleText.setText(strlist[it])
+                        })
+            }
+
+            listMultiAlert.setOnClickListener {
+                val strlist = arrayOf("ruirui","funyafunya","ahoaho")
+                dialogfragment.ListMultiAlertShow(this,
+                        R.string.end_messe_title,
+                        strlist,
+                        {it ->
+                            var txt = "Select:"
+                            var j = 0
+                            for (i in it){
+                                if (i == true) txt = "${txt} & ${strlist[j]}"
+                                j += 1
+                            }
+                            listMultiText.setText(txt)
                         })
             }
 
