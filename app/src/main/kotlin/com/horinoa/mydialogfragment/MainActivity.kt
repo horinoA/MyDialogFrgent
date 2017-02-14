@@ -2,6 +2,7 @@ package com.horinoa.mydialogfragment
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.widget.Button
 import android.widget.TextView
@@ -20,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     val listSingleAlert:Button by lazy {findViewById(R.id.listSingleAlertButtom) as Button}
     val listMultiText: TextView by lazy{ findViewById(R.id.listMultiAlertTextView) as TextView}
     val listMultiAlert:Button by lazy {findViewById(R.id.listMultiAlertButtom) as Button}
+    val sppinigAlert:Button by lazy{findViewById(R.id.sppiningButtom) as Button}
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -110,6 +112,16 @@ class MainActivity : AppCompatActivity() {
                         })
             }
 
+            sppinigAlert.setOnClickListener {
+                val dialog = dialogfragment.SppiningDialog(this,
+                        R.string.end_messe_title,
+                        R.string.end_messe_messe
+                        )
+                dialog.show(this.fragmentManager,"sppinig")
+                Handler().postDelayed({
+                    dialog.dismiss()
+                },5000)
+            }
 
         }
     }

@@ -4,6 +4,7 @@ import android.app.*
 import android.app.DialogFragment
 import android.content.DialogInterface
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import java.io.Serializable
 
@@ -19,6 +20,7 @@ val ITEMS = "items"
 val LISTENER = "listener"
 val CHOOSESINGLE = "chooseItemInt"
 val CHOOSEMULTI = "choosemulti"
+val SPPNING = "sppinig"
 
 class ClickListener : Serializable {
     var okClickListner: DialogInterface.OnClickListener? = null
@@ -126,9 +128,16 @@ class DialogFragment {
         val mydialogfragment = MyDialogFragment.newInstance(args)
         mydialogfragment.show(activity.fragmentManager,"LISTMULTHI")
     }
+
+    fun SppiningDialog(activity: Activity, title: Int, messe: Int):DialogFragment{
+        val args = Bundle()
+        args.putInt(TITLE,title)
+        args.putInt(MESSE,messe)
+        return MyDialogFragment.newInstance(args)
+    }
 }
 
-open class MyDialogFragment : DialogFragment() {
+class MyDialogFragment : DialogFragment() {
 
     init { }
 
@@ -140,61 +149,72 @@ open class MyDialogFragment : DialogFragment() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
-
-        super.onSaveInstanceState(outState)
-    }
-
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        val builder = AlertDialog.Builder(activity)
-        val listerner = arguments.getSerializable(LISTENER) as ClickListener
+        if (this.tag == SPPNING) {
+            val builder = ProgressDialog(activity)
+            if (arguments.containsKey(TITLE)) {
+                builder.setTitle(getString(arguments.getInt(TITLE)))
+            }
+            if (arguments.containsKey(MESSE)) {
+                builder.setMessage(getString(arguments.getInt(MESSE)))
+            }
+            builder.setProgressStyle(ProgressDialog.STYLE_SPINNER)
+            return builder
+        }else {
+            val builder = AlertDialog.Builder(activity)
+            val listerner = arguments.getSerializable(LISTENER) as ClickListener
 
-        if(arguments.containsKey(TITLE)){builder.setTitle(getString(arguments.getInt(TITLE)))}
-        if(arguments.containsKey(MESSE)){builder.setMessage(getString(arguments.getInt(MESSE)))}
-        if(arguments.containsKey(ITEMS)){
-            builder.setItems(arguments.getStringArray(ITEMS),listerner.listClick)
-        }
+            if (arguments.containsKey(TITLE)) {
+                builder.setTitle(getString(arguments.getInt(TITLE)))
+            }
+            if (arguments.containsKey(MESSE)) {
+                builder.setMessage(getString(arguments.getInt(MESSE)))
+            }
+            if (arguments.containsKey(ITEMS)) {
+                builder.setItems(arguments.getStringArray(ITEMS), listerner.listClick)
+            }
 
-        val okString = listerner.neutralClickListner?.let{"Yes"} ?: "OK"
-        val noString = listerner.neutralClickListner?.let{"No"} ?: "Cancel"
-        listerner.okClickListner?.let {builder.setPositiveButton(okString, listerner.okClickListner ) }
-        listerner.noClickListner?.let {builder.setNegativeButton(noString, listerner.noClickListner ) }
-        listerner.neutralClickListner?.let{builder.setNeutralButton("Later",listerner.neutralClickListner)}
+            val okString = listerner.neutralClickListner?.let { "Yes" } ?: "OK"
+            val noString = listerner.neutralClickListner?.let { "No" } ?: "Cancel"
+            listerner.okClickListner?.let { builder.setPositiveButton(okString, listerner.okClickListner) }
+            listerner.noClickListner?.let { builder.setNegativeButton(noString, listerner.noClickListner) }
+            listerner.neutralClickListner?.let { builder.setNeutralButton("Later", listerner.neutralClickListner) }
 
-        listerner.listSinglecallback?.let{
-            val callback = listerner.listSinglecallback as (Int) -> Unit
-            builder.setSingleChoiceItems(arguments.getStringArray(ITEMS), 0,
-                    {dialog,i ->
-                        arguments.putInt(CHOOSESINGLE,i)
+            listerner.listSinglecallback?.let {
+                val callback = listerner.listSinglecallback as (Int) -> Unit
+                builder.setSingleChoiceItems(arguments.getStringArray(ITEMS), 0,
+                    { dialog, i ->
+                        arguments.putInt(CHOOSESINGLE, i)
                     })
-            builder.setPositiveButton(okString,{ dialog, i ->
-                callback(arguments.getInt(CHOOSESINGLE))
-                dialog.dismiss()
-            })
-            builder.setNegativeButton(noString,{ dialog, i ->
-                dialog.dismiss()
-            })
-        }
+                builder.setPositiveButton(okString, { dialog, i ->
+                    callback(arguments.getInt(CHOOSESINGLE))
+                    dialog.dismiss()
+                })
+                builder.setNegativeButton(noString, { dialog, i ->
+                    dialog.dismiss()
+                })
+            }
 
-        listerner.listMulticallback?.let{
-            val callback = listerner.listMulticallback as (BooleanArray) -> Unit
-            val checkArry = BooleanArray(arguments.getStringArray(ITEMS).size,{false})
+            listerner.listMulticallback?.let {
+                val callback = listerner.listMulticallback as (BooleanArray) -> Unit
+                val checkArry = BooleanArray(arguments.getStringArray(ITEMS).size, { false })
 
-            builder.setMultiChoiceItems(arguments.getStringArray(ITEMS),null,
+                builder.setMultiChoiceItems(arguments.getStringArray(ITEMS), null,
                     { dialog, i, isChecked ->
-                        if (isChecked)checkArry[i] = true else checkArry[i] = false
-                        arguments.putBooleanArray(CHOOSEMULTI,checkArry)
+                        if (isChecked) checkArry[i] = true else checkArry[i] = false
+                        arguments.putBooleanArray(CHOOSEMULTI, checkArry)
                     })
-            builder.setPositiveButton(okString, { dialog, i ->
-                callback(arguments.getBooleanArray(CHOOSEMULTI))
-                dialog.dismiss()
-            })
-            builder.setNegativeButton(noString,{dialog,i ->
-                dialog.dismiss()
-            })
+                builder.setPositiveButton(okString, { dialog, i ->
+                    callback(arguments.getBooleanArray(CHOOSEMULTI))
+                    dialog.dismiss()
+                })
+                builder.setNegativeButton(noString, { dialog, i ->
+                    dialog.dismiss()
+                })
+            }
+            return builder.create()
         }
-
-        return builder.create()
+        return AlertDialog.Builder(activity).create()
     }
 
 }
